@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOH - Speakers: Interactive Lesson</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --accent: #f59e0b;
+            --bg-color: #f1f5f9;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+            font-family: 'Nunito', sans-serif;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+        }
+        h1, h2, h3, .heading-font, .nav-btn, #stats-bar {
+            font-family: 'Cinzel', serif;
+        }
+        
+        /* Stats & Nav */
+        #stats-bar {
+            background: linear-gradient(90deg, #0f172a 0%, #1e3a8a 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-container {
+            background-color: #0f172a;
+            border-bottom: 4px solid var(--primary-light);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .nav-btn {
+            color: #cbd5e1;
+            padding: 1rem;
+            font-weight: bold;
+            letter-spacing: 0.05em;
+            transition: all 0.3s;
+            border-bottom: 4px solid transparent;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+        .nav-btn:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+        .nav-btn.active {
+            color: #fff;
+            border-bottom-color: var(--accent);
+            background-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .page-section { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* General UI Elements */
+        .academy-box {
+            background-color: #ffffff;
+            border: 2px solid #0f172a;
+            border-top: 6px solid var(--primary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border-radius: 0.5rem;
+        }
+        .btn {
+            background-color: var(--primary); color: #fff; border: 1px solid #0f172a;
+            transition: all 0.2s; font-weight: 700; text-transform: uppercase; font-size: 0.875rem;
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;
+        }
+        .btn:hover { background-color: #0f172a; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
+        .btn:active { transform: translateY(0); }
+        .btn-secondary { background-color: #64748b; border-color: #475569; }
+        .btn-secondary:hover { background-color: #475569; }
+        
+        .input-box {
+            background-color: #f8fafc; border: 1px solid #cbd5e1; border-bottom: 2px solid var(--primary-light);
+            outline: none; padding: 6px 12px; font-family: 'Nunito', sans-serif; font-weight: 600;
+            color: var(--primary); transition: border-color 0.2s; width: 100%; border-radius: 4px;
+        }
+        .input-box:focus { background-color: #fff; border-bottom-color: var(--accent); box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2); }
+        .input-box-inline { width: auto; display: inline-block; }
+        
+        .feedback { font-style: italic; font-weight: bold; margin-top: 1rem; padding: 0.75rem; border-radius: 4px; display: none; }
+        .correct { color: #065f46; background-color: #d1fae5; display: block; border-left: 4px solid #10b981; }
+        .incorrect { color: #991b1b; background-color: #fee2e2; display: block; border-left: 4px solid #ef4444; }
+        
+        .sound-icon { cursor: pointer; color: var(--primary-light); font-size: 1.2rem; transition: transform 0.2s; }
+        .sound-icon:hover { transform: scale(1.2); color: var(--primary); }
+
+        /* Flashcards & Games */
+        .flashcard-container { perspective: 1000px; width: 100%; max-width: 500px; height: 300px; margin: 0 auto; cursor: pointer; }
+        .flashcard { width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+        .flashcard.is-flipped { transform: rotateY(180deg); }
+        .flashcard-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 2px solid #cbd5e1; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .flashcard-front { background-color: #ffffff; color: #0f172a; }
+        .flashcard-back { background-color: var(--primary); color: white; transform: rotateY(180deg); }
+
+        .memory-grid { display: grid; gap: 0.75rem; margin: 0 auto; max-width: 700px; }
+        .memory-card { perspective: 1000px; cursor: pointer; }
+        .memory-card-inner { width: 100%; height: 100%; position: relative; transition: transform 0.5s; transform-style: preserve-3d; }
+        .memory-card.flipped .memory-card-inner, .memory-card.matched .memory-card-inner { transform: rotateY(180deg); }
+        .memory-card-front, .memory-card-back {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            display: flex; align-items: center; justify-content: center; border-radius: 0.5rem;
+            font-weight: bold; text-align: center; padding: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .memory-card-front { background-color: var(--primary-light); color: white; font-size: 1.5rem; }
+        .memory-card-back { background-color: #ffffff; color: #0f172a; transform: rotateY(180deg); border: 2px solid var(--primary-light); font-size: 1.1rem;}
+        .memory-card.matched .memory-card-back { background-color: #d1fae5; border-color: #10b981; color: #064e3b; }
+
+        /* Sentence Builder */
+        .word-bank-btn {
+            background-color: #e2e8f0; color: #334155; padding: 8px 16px;
+            border-radius: 0.5rem; cursor: pointer; font-weight: bold;
+            border: 2px solid #cbd5e1; transition: all 0.2s;
+            display: inline-block; margin: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .word-bank-btn:hover { background-color: #cbd5e1; transform: translateY(-2px); }
+        .word-bank-btn.used { opacity: 0.3; pointer-events: none; transform: scale(0.95); }
+        
+        .built-word {
+            background-color: var(--primary-light); color: white; padding: 8px 16px;
+            border-radius: 0.5rem; cursor: pointer; font-weight: bold;
+            display: inline-block; margin: 4px; border: 2px solid var(--primary);
+            animation: pop 0.2s ease-out;
+        }
+        .built-word:hover { background-color: #ef4444; border-color: #b91c1c; content: "x"; }
+
+        .sentence-area {
+            min-height: 60px; background-color: #f8fafc; border: 2px dashed #cbd5e1;
+            border-radius: 0.5rem; padding: 8px; margin-bottom: 1rem;
+            display: flex; flex-wrap: wrap; align-items: center;
+        }
+
+        /* Gamification */
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        .pop { animation: pop 0.3s ease-out; }
+        @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .floating-xp {
+            position: absolute; color: var(--accent); font-weight: bold; font-size: 1.5rem;
+            pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 100;
+        }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-40px) scale(1.2); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <!-- Stats Bar -->
+    <div id="stats-bar">
+        <div class="flex items-center gap-3">
+            <!-- Replace 'your-logo.png' with the actual path to your logo. The UI Avatar serves as a fallback. -->
+            <img src="your-logo.png" alt="Logo" class="h-8 w-auto rounded shadow-sm object-contain" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=KOH&background=f59e0b&color=fff';">
+            <span class="text-xl font-bold tracking-widest uppercase">KOH - Speakers</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-yellow-400 text-xl"><i class="fa-solid fa-star"></i></span>
+            <span id="global-xp" class="text-lg font-bold">0 XP</span>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav-container flex overflow-x-auto shadow-md">
+        <div class="max-w-6xl mx-auto flex w-full">
+            <button class="nav-btn active flex-1 text-center whitespace-nowrap" onclick="switchTab('flashcards')">
+                <i class="fa-solid fa-clone mr-1"></i> Flashcards
+            </button>
+            <button class="nav-btn flex-1 text-center whitespace-nowrap" onclick="switchTab('learning')">
+                <i class="fa-solid fa-brain mr-1"></i> Learn Mode
+            </button>
+            <button class="nav-btn flex-1 text-center whitespace-nowrap" onclick="switchTab('memory')">
+                <i class="fa-solid fa-gamepad mr-1"></i> Match Game
+            </button>
+            <button class="nav-btn flex-1 text-center whitespace-nowrap" onclick="switchTab('practice')">
+                <i class="fa-solid fa-spell-check mr-1"></i> Grammar & Skills
+            </button>
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto p-4 md:p-8 flex-1 w-full">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-5xl font-bold mb-3 text-blue-900 uppercase">Unit 1: Classmates</h1>
+            <p class="text-slate-600 italic">Master your vocabulary and grammar skills[cite: 2].</p>
+        </header>
+        
+        <!-- SECTION 1: FLASHCARDS -->
+        <section id="flashcards" class="page-section active">
+            <div class="academy-box p-8 rounded text-center relative">
+                <h2 class="text-3xl font-bold mb-2 text-blue-900">Vocabulary Cards</h2>
+                <p class="mb-8 text-slate-500 italic">Инструкция: Нажимайте на карточку, чтобы увидеть перевод. Используйте кнопки для переключения слов[cite: 2].</p>
+                
+                <div class="flashcard-container mb-8" onclick="this.querySelector('.flashcard').classList.toggle('is-flipped'); playCardFlipSound();">
+                    <div class="flashcard" id="fc-card">
+                        <div class="flashcard-face flashcard-front">
+                            <span class="sound-icon absolute top-4 right-4" onclick="event.stopPropagation(); speakText(vocab[currentCard].en)">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </span>
+                            <div class="text-5xl font-bold mb-4 text-blue-900" id="fc-en">Word</div>
+                            <div class="text-sm text-slate-400 mt-4 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer mr-1"></i> Click to flip</div>
+                        </div>
+                        <div class="flashcard-face flashcard-back">
+                            <div class="text-4xl font-bold" id="fc-ru">Перевод</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center items-center gap-6">
+                    <button class="btn btn-secondary px-6 py-3 rounded text-white" onclick="prevCard()">
+                        <i class="fa-solid fa-chevron-left"></i> Previous
+                    </button>
+                    <span id="fc-counter" class="font-bold text-xl text-slate-600 bg-slate-100 px-4 py-2 rounded-full">1 / X</span>
+                    <button class="btn px-6 py-3 rounded" onclick="nextCard()">
+                        Next <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: LEARNING -->
+        <section id="learning" class="page-section">
+            <div class="academy-box p-8 rounded text-center max-w-2xl mx-auto relative overflow-hidden">
+                <div class="absolute top-4 right-4 flex items-center gap-2 bg-orange-100 text-orange-600 px-3 py-1 rounded-full font-bold pop" id="streak-badge" style="display: none;">
+                    <i class="fa-solid fa-fire"></i> Streak x<span id="streak-count">0</span>
+                </div>
+                
+                <h2 class="text-3xl font-bold mb-2 text-blue-900">Active Recall</h2>
+                <p class="mb-6 text-slate-500 italic">Инструкция: Напишите слово на английском. Нажмите "Hint", если нужна подсказка!</p>
+                
+                <div class="w-full bg-slate-200 rounded-full h-3 mb-8 overflow-hidden shadow-inner">
+                    <div id="learn-progress" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+
+                <div id="learn-active-area">
+                    <div class="text-lg mb-2 text-slate-500 uppercase tracking-wider font-bold">Translate to English:</div>
+                    <div class="text-4xl font-bold text-blue-900 mb-8" id="learn-word-ru">Слово</div>
+                    
+                    <input type="text" id="learn-input" class="input-box text-center text-2xl mb-6 py-3" placeholder="Type here..." onkeypress="if(event.key==='Enter') checkLearn()">
+                    
+                    <div class="flex justify-center gap-4">
+                        <button class="btn px-8 py-3 rounded text-lg" onclick="checkLearn()">
+                            <i class="fa-solid fa-check"></i> Submit
+                        </button>
+                        <button class="btn btn-secondary px-6 py-3 rounded text-white" onclick="hintLearn()">
+                            <i class="fa-regular fa-lightbulb"></i> Hint
+                        </button>
+                    </div>
+                    
+                    <div id="learn-feedback" class="mt-6 text-xl font-bold h-8"></div>
+                </div>
+
+                <div id="learn-complete-area" class="hidden py-8">
+                    <div class="text-6xl mb-6 text-yellow-500"><i class="fa-solid fa-trophy"></i></div>
+                    <h3 class="text-3xl font-bold mb-4 text-blue-900">Module Completed!</h3>
+                    <p class="text-lg text-slate-600 mb-6">You earned <span id="learn-final-xp" class="font-bold text-orange-500">0 XP</span> in this session.</p>
+                    <button class="btn px-8 py-3 rounded text-lg" onclick="restartLearn()">
+                        <i class="fa-solid fa-rotate-right"></i> Practice Again
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: MATCH GAME -->
+        <section id="memory" class="page-section">
+            <div class="academy-box p-8 text-center relative">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <h2 class="text-3xl font-bold text-blue-900">Memory Match</h2>
+                    <div class="flex items-center gap-4">
+                        <div class="font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-lg">Moves: <span id="memory-moves">0</span></div>
+                        <button class="btn btn-secondary px-4 py-2 rounded text-sm" onclick="initMemoryGame()">
+                            <i class="fa-solid fa-arrows-rotate"></i> Shuffle & Restart
+                        </button>
+                    </div>
+                </div>
+                <p class="mb-6 text-slate-500 italic">Инструкция: Найдите пары (английское слово и его русский перевод). Тренируйте память[cite: 2]!</p>
+                
+                <div class="memory-grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4" id="memory-grid">
+                    <!-- Cards generated by JS -->
+                </div>
+                
+                <!-- Win Screen overlay for Memory Game -->
+                <div id="memory-win" class="hidden flex-col items-center justify-center mt-8 p-6 bg-green-50 border-2 border-green-200 rounded-lg pop">
+                    <h3 class="text-2xl font-bold text-green-700 mb-2"><i class="fa-solid fa-crown mr-2"></i>Excellent Memory!</h3>
+                    <p class="text-green-600 font-bold mb-4">You completed the game in <span id="memory-final-moves"></span> moves and earned 50 XP!</p>
+                    <button class="btn px-6 py-2" onclick="initMemoryGame()">Play Again</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: GRAMMAR & SKILLS -->
+        <section id="practice" class="page-section">
+            
+            <!-- Task 1: Present Simple Errors -->
+            <div class="academy-box p-6 mb-8 relative">
+                <h2 class="text-2xl font-bold mb-1 text-blue-900"><i class="fa-solid fa-magnifying-glass text-blue-500 mr-2"></i> Task 1: Error Correction</h2>
+                <p class="mb-6 text-slate-500 italic border-b pb-4">Инструкция: В каждом предложении есть одна ошибка. Напишите только одно правильное слово, которое исправит ошибку[cite: 2].</p>
+                <div class="grid gap-4 mb-6">
+                    <div class="p-3 bg-red-50 border-l-4 border-red-400 rounded">
+                        <span class="line-through text-slate-500 mr-2">Carla paint houses.[cite: 2]</span> 
+                        <br>Correction: <input type="text" id="t1-1" class="input-box input-box-inline w-40 mt-2">
+                    </div>
+                    <div class="p-3 bg-red-50 border-l-4 border-red-400 rounded">
+                        <span class="line-through text-slate-500 mr-2">He don't play chess.[cite: 2]</span> 
+                        <br>Correction: <input type="text" id="t1-2" class="input-box input-box-inline w-40 mt-2">
+                    </div>
+                    <div class="p-3 bg-red-50 border-l-4 border-red-400 rounded">
+                        <span class="line-through text-slate-500 mr-2">Do Rocco paint pictures?[cite: 2]</span> 
+                        <br>Correction: <input type="text" id="t1-3" class="input-box input-box-inline w-40 mt-2">
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <button class="btn px-6 py-2 rounded" onclick="checkInputs('t1', ['paints','doesn\'t','does'], this)"><i class="fa-solid fa-clipboard-check"></i> Check</button>
+                    <button class="btn btn-secondary px-6 py-2 rounded" onclick="resetTaskInputs('t1', 3)"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                </div>
+                <p id="feedback-t1" class="feedback"></p>
+            </div>
+
+            <!-- Task 2: Mixed Gap Fill -->
+            <div class="academy-box p-6 mb-8 relative">
+                <h2 class="text-2xl font-bold mb-1 text-blue-900"><i class="fa-solid fa-pen-to-square text-blue-500 mr-2"></i> Task 2: Mixed Grammar Forms</h2>
+                <p class="mb-6 text-slate-500 italic border-b pb-4">Инструкция: Раскройте скобки, используя Present Simple (утверждение, отрицание или вопрос)[cite: 2].</p>
+                <div class="grid gap-4 mb-6 text-lg">
+                    <div class="bg-slate-50 p-3 rounded">1. <input type="text" id="t2-1" class="input-box input-box-inline w-48 text-center mx-2"> (you / play) football in your free time?[cite: 2]</div>
+                    <div class="bg-slate-50 p-3 rounded">2. No, I <input type="text" id="t2-2" class="input-box input-box-inline w-48 text-center mx-2"> (not / play). I paint pictures.[cite: 2]</div>
+                    <div class="bg-slate-50 p-3 rounded">3. Elena <input type="text" id="t2-3" class="input-box input-box-inline w-48 text-center mx-2"> (often / do) her homework at school.[cite: 2]</div>
+                </div>
+                <div class="flex gap-4">
+                    <button class="btn px-6 py-2 rounded" onclick="checkInputs('t2', ['do you play','don\'t play','often does'], this)"><i class="fa-solid fa-clipboard-check"></i> Check</button>
+                    <button class="btn btn-secondary px-6 py-2 rounded" onclick="resetTaskInputs('t2', 3)"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                </div>
+                <p id="feedback-t2" class="feedback"></p>
+            </div>
+
+            <!-- Task 3: Time & Adverbs -->
+            <div class="academy-box p-6 mb-8 relative">
+                <h2 class="text-2xl font-bold mb-1 text-blue-900"><i class="fa-regular fa-clock text-blue-500 mr-2"></i> Task 3: Prepositions & Adverbs</h2>
+                <p class="mb-6 text-slate-500 italic border-b pb-4">Инструкция: Выберите правильный предлог времени или позицию наречия частотности[cite: 2].</p>
+                <div class="grid gap-4 mb-6">
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        1. I wake up at 7 a.m. <select id="t3-1" class="input-box input-box-inline w-32"><option value="">...</option><option value="in">in</option><option value="at">at</option></select> the morning.[cite: 2]
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        2. <select id="t3-2" class="input-box input-box-inline w-32"><option value="">...</option><option value="On">On</option><option value="In">In</option></select> Friday morning we have Art.[cite: 2]
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        3. He <select id="t3-3" class="input-box input-box-inline w-40"><option value="">...</option><option value="is often">is often</option><option value="often is">often is</option></select> late for school.[cite: 2]
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <button class="btn px-6 py-2 rounded" onclick="checkSelects('t3', ['in','On','is often'], this)"><i class="fa-solid fa-clipboard-check"></i> Check</button>
+                    <button class="btn btn-secondary px-6 py-2 rounded" onclick="resetTaskInputs('t3', 3)"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                </div>
+                <p id="feedback-t3" class="feedback"></p>
+            </div>
+
+            <!-- Task 4: Sentence Building -->
+            <div class="academy-box p-6 mb-8 relative">
+                <h2 class="text-2xl font-bold mb-1 text-blue-900"><i class="fa-solid fa-layer-group text-blue-500 mr-2"></i> Task 4: Sentence Builder</h2>
+                <p class="mb-6 text-slate-500 italic border-b pb-4">Инструкция: Нажимайте на слова в правильном порядке, чтобы составить предложение. Нажмите на слово в ответе, чтобы убрать его.</p>
+                
+                <div class="mb-8">
+                    <p class="font-bold text-slate-700 mb-2">1. Construct the sentence:[cite: 2]</p>
+                    <div class="sentence-area" id="builder-area-1"></div>
+                    <div class="flex flex-wrap" id="bank-1">
+                        <!-- Words injected by JS -->
+                    </div>
+                    <input type="hidden" id="t4-1">
+                </div>
+                
+                <div class="mb-6">
+                    <p class="font-bold text-slate-700 mb-2">2. Construct the sentence:[cite: 2]</p>
+                    <div class="sentence-area" id="builder-area-2"></div>
+                    <div class="flex flex-wrap" id="bank-2">
+                        <!-- Words injected by JS -->
+                    </div>
+                    <input type="hidden" id="t4-2">
+                </div>
+
+                <div class="flex gap-4">
+                    <button class="btn px-6 py-2 rounded" onclick="checkBuilder(this)"><i class="fa-solid fa-clipboard-check"></i> Check</button>
+                    <button class="btn btn-secondary px-6 py-2 rounded" onclick="initBuilder()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                </div>
+                <p id="feedback-t4" class="feedback"></p>
+            </div>
+
+            <!-- Task 5: True or False Reading -->
+            <div class="academy-box p-6 mb-8 relative">
+                <h2 class="text-2xl font-bold mb-1 text-blue-900"><i class="fa-solid fa-book-open text-blue-500 mr-2"></i> Task 5: Reading Comprehension</h2>
+                <p class="mb-4 text-slate-500 italic">Инструкция: Прочитайте текст и отметьте утверждения как True (Правда) или False (Ложь).</p>
+                
+                <div class="bg-blue-50 p-5 rounded-lg border border-blue-200 mb-6 font-serif text-lg text-slate-800 leading-relaxed shadow-sm">
+                    "My name is Tom. I am a student at boarding school. We wake up at 6:30 and have breakfast in the school canteen. Lessons start at 9:00. We often do experiments in Science. I play chess after school."[cite: 2]
+                </div>
+                
+                <div class="grid gap-4 mb-6">
+                    <div class="flex flex-col md:flex-row justify-between md:items-center bg-slate-50 p-3 rounded">
+                        <span>1. Tom has breakfast in the classroom.[cite: 2]</span>
+                        <select id="t5-1" class="input-box input-box-inline w-32 mt-2 md:mt-0"><option value="">...</option><option value="True">True</option><option value="False">False</option></select>
+                    </div>
+                    <div class="flex flex-col md:flex-row justify-between md:items-center bg-slate-50 p-3 rounded">
+                        <span>2. Lessons start at nine o'clock.[cite: 2]</span>
+                        <select id="t5-2" class="input-box input-box-inline w-32 mt-2 md:mt-0"><option value="">...</option><option value="True">True</option><option value="False">False</option></select>
+                    </div>
+                    <div class="flex flex-col md:flex-row justify-between md:items-center bg-slate-50 p-3 rounded">
+                        <span>3. Tom never does experiments.[cite: 2]</span>
+                        <select id="t5-3" class="input-box input-box-inline w-32 mt-2 md:mt-0"><option value="">...</option><option value="True">True</option><option value="False">False</option></select>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <button class="btn px-6 py-2 rounded" onclick="checkSelects('t5', ['False','True','False'], this)"><i class="fa-solid fa-clipboard-check"></i> Check</button>
+                    <button class="btn btn-secondary px-6 py-2 rounded" onclick="resetTaskInputs('t5', 3)"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                </div>
+                <p id="feedback-t5" class="feedback"></p>
+            </div>
+
+            <!-- Task 6: Listening Dictation -->
+            <div class="academy-box p-6 mb-8 relative">
+                <h2 class="text-2xl font-bold mb-1 text-blue-900"><i class="fa-solid fa-headphones text-blue-500 mr-2"></i> Task 6: Listening Dictation</h2>
+                <p class="mb-6 text-slate-500 italic border-b pb-4">Инструкция: Нажмите на динамик, послушайте предложение и запишите его. (Не забывайте про знаки препинания!)</p>
+                
+                <div class="grid gap-6 mb-6">
+                    <div class="flex flex-col md:flex-row items-center gap-4">
+                        <button class="btn rounded-full w-12 h-12 flex-shrink-0" onclick="speakText('What is your favourite subject?')"><i class="fa-solid fa-volume-high"></i></button>
+                        <input type="text" id="t6-1" class="input-box w-full text-lg" placeholder="Type what you hear...">
+                    </div>
+                    <div class="flex flex-col md:flex-row items-center gap-4">
+                        <button class="btn rounded-full w-12 h-12 flex-shrink-0" onclick="speakText('I always have breakfast at home.')"><i class="fa-solid fa-volume-high"></i></button>
+                        <input type="text" id="t6-2" class="input-box w-full text-lg" placeholder="Type what you hear...">
+                    </div>
+                    <div class="flex flex-col md:flex-row items-center gap-4">
+                        <button class="btn rounded-full w-12 h-12 flex-shrink-0" onclick="speakText('Does she play the guitar?')"><i class="fa-solid fa-volume-high"></i></button>
+                        <input type="text" id="t6-3" class="input-box w-full text-lg" placeholder="Type what you hear...">
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <button class="btn px-6 py-2 rounded" onclick="checkDictation('t6', ['what is your favourite subject?', 'i always have breakfast at home.', 'does she play the guitar?'], this)"><i class="fa-solid fa-clipboard-check"></i> Check</button>
+                    <button class="btn btn-secondary px-6 py-2 rounded" onclick="resetTaskInputs('t6', 3)"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                </div>
+                <p id="feedback-t6" class="feedback"></p>
+            </div>
+
+            <!-- Task 7: Grammar Matching -->
+            <div class="academy-box p-6 mb-8 relative">
+                <h2 class="text-2xl font-bold mb-1 text-blue-900"><i class="fa-solid fa-link text-blue-500 mr-2"></i> Task 7: Match Questions to Answers</h2>
+                <p class="mb-6 text-slate-500 italic border-b pb-4">Инструкция: Подберите правильный ответ на каждый вопрос[cite: 2].</p>
+                
+                <div class="flex flex-col md:flex-row gap-8 mb-6">
+                    <div class="flex-1 space-y-4">
+                        <div class="flex items-center gap-2">
+                            <select id="t7-1" class="input-box input-box-inline w-16 text-center font-bold"><option value="">-</option><option value="a">a</option><option value="b">b</option><option value="c">c</option><option value="d">d</option></select>
+                            <span>1. Do you play an instrument?[cite: 2]</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="t7-2" class="input-box input-box-inline w-16 text-center font-bold"><option value="">-</option><option value="a">a</option><option value="b">b</option><option value="c">c</option><option value="d">d</option></select>
+                            <span>2. Does he live here?[cite: 2]</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="t7-3" class="input-box input-box-inline w-16 text-center font-bold"><option value="">-</option><option value="a">a</option><option value="b">b</option><option value="c">c</option><option value="d">d</option></select>
+                            <span>3. What's your favourite subject?[cite: 2]</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="t7-4" class="input-box input-box-inline w-16 text-center font-bold"><option value="">-</option><option value="a">a</option><option value="b">b</option><option value="c">c</option><option value="d">d</option></select>
+                            <span>4. When is the club?[cite: 2]</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+                        <p><strong>a.</strong> No, he doesn't.</p>
+                        <p><strong>b.</strong> It's on Monday.</p>
+                        <p><strong>c.</strong> Yes, I do.</p>
+                        <p><strong>d.</strong> It's Music.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <button class="btn px-6 py-2 rounded" onclick="checkSelects('t7', ['c','a','d','b'], this)"><i class="fa-solid fa-clipboard-check"></i> Check</button>
+                    <button class="btn btn-secondary px-6 py-2 rounded" onclick="resetTaskInputs('t7', 4)"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                </div>
+                <p id="feedback-t7" class="feedback"></p>
+            </div>
+            
+        </section>
+
+    </div>
+
+    <script>
+        // --- System Audio Context & XP Gamification ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let totalXP = 0;
+
+        function playTone(freq, type, duration, vol=0.1) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playCorrectSound() { playTone(523.25, 'sine', 0.1, 0.2); setTimeout(() => playTone(659.25, 'sine', 0.3, 0.2), 100); }
+        function playIncorrectSound() { playTone(200, 'sawtooth', 0.3, 0.1); }
+        function playCardFlipSound() { playTone(400, 'sine', 0.1, 0.05); }
+
+        function addXP(amount, triggerElement) {
+            totalXP += amount;
+            document.getElementById('global-xp').innerText = totalXP + " XP";
+            if (triggerElement) {
+                const rect = triggerElement.getBoundingClientRect();
+                const xpLabel = document.createElement('div');
+                xpLabel.className = 'floating-xp';
+                xpLabel.innerText = `+${amount} XP`;
+                xpLabel.style.left = (rect.left + window.scrollX + rect.width/2 - 20) + 'px';
+                xpLabel.style.top = (rect.top + window.scrollY - 20) + 'px';
+                document.body.appendChild(xpLabel);
+                setTimeout(() => xpLabel.remove(), 1000);
+            }
+        }
+
+        // --- Data Source[cite: 2] ---
+        const vocab = [
+            { en: "Art", ru: "ИЗО (Искусство)" },
+            { en: "Computer Studies", ru: "Информатика" },
+            { en: "Geography", ru: "География" },
+            { en: "History", ru: "История" },
+            { en: "Maths", ru: "Математика" },
+            { en: "Music", ru: "Музыка" },
+            { en: "P.E.", ru: "Физкультура" },
+            { en: "Science", ru: "Естествознание" },
+            { en: "calculator", ru: "калькулятор" },
+            { en: "dictionary", ru: "словарь" },
+            { en: "laptop", ru: "ноутбук" },
+            { en: "map", ru: "карта" },
+            { en: "pencil case", ru: "пенал" },
+            { en: "rubber", ru: "ластик" },
+            { en: "scissors", ru: "ножницы" },
+            { en: "trainers", ru: "кроссовки" },
+            { en: "canteen", ru: "столовая" },
+            { en: "library", ru: "библиотека" },
+            { en: "gym", ru: "спортзал" },
+            { en: "staff room", ru: "учительская" },
+            { en: "playground", ru: "игровая площадка" }
+        ];
+
+        function speakText(text) {
+            let clean = text.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
+            const u = new SpeechSynthesisUtterance(clean);
+            u.lang = 'en-GB';
+            window.speechSynthesis.speak(u);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // --- Flashcards ---
+        let currentCard = 0;
+        function renderCard() {
+            const cardEl = document.getElementById('fc-card');
+            cardEl.classList.remove('is-flipped');
+            setTimeout(() => {
+                document.getElementById('fc-en').innerText = vocab[currentCard].en;
+                document.getElementById('fc-ru').innerText = vocab[currentCard].ru;
+                document.getElementById('fc-counter').innerText = `${currentCard + 1} / ${vocab.length}`;
+            }, 150); 
+        }
+        function nextCard() { currentCard = (currentCard + 1) % vocab.length; renderCard(); }
+        function prevCard() { currentCard = (currentCard - 1 + vocab.length) % vocab.length; renderCard(); }
+
+        // --- Learning Mode ---
+        let learnQueue = [], currentLearnWord = null, currentStreak = 0, sessionXP = 0, originalLength = 0;
+        function initLearn() {
+            learnQueue = [...vocab].sort(() => Math.random() - 0.5).slice(0, 10);
+            originalLength = learnQueue.length;
+            currentStreak = 0; sessionXP = 0;
+            updateStreakUI();
+            document.getElementById('learn-active-area').classList.remove('hidden');
+            document.getElementById('learn-complete-area').classList.add('hidden');
+            updateLearnProgress(); nextLearnWord();
+        }
+        function updateLearnProgress() {
+            let done = originalLength - learnQueue.length;
+            document.getElementById('learn-progress').style.width = ((done / originalLength) * 100) + '%';
+        }
+        function updateStreakUI() {
+            const badge = document.getElementById('streak-badge');
+            if (currentStreak > 1) {
+                badge.style.display = 'flex'; document.getElementById('streak-count').innerText = currentStreak;
+                badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
+            } else { badge.style.display = 'none'; }
+        }
+        function nextLearnWord() {
+            if (learnQueue.length === 0) {
+                document.getElementById('learn-active-area').classList.add('hidden');
+                document.getElementById('learn-complete-area').classList.remove('hidden');
+                document.getElementById('learn-final-xp').innerText = sessionXP + " XP";
+                document.getElementById('learn-progress').style.width = '100%';
+                playCorrectSound(); setTimeout(playCorrectSound, 200); return;
+            }
+            currentLearnWord = learnQueue[0];
+            document.getElementById('learn-word-ru').innerText = currentLearnWord.ru;
+            const inputEl = document.getElementById('learn-input');
+            inputEl.value = ''; inputEl.focus(); document.getElementById('learn-feedback').innerText = '';
+        }
+        function checkLearn() {
+            if (!currentLearnWord) return;
+            const inputEl = document.getElementById('learn-input');
+            const val = inputEl.value.trim().toLowerCase();
+            const correct = currentLearnWord.en.toLowerCase();
+            const fb = document.getElementById('learn-feedback');
+
+            if (val === correct) {
+                fb.innerText = 'Correct! ✨'; fb.className = 'mt-6 text-xl font-bold text-green-600 pop h-8';
+                playCorrectSound(); currentStreak++; updateStreakUI();
+                let earned = 10 + (currentStreak > 2 ? (currentStreak - 2) * 5 : 0);
+                sessionXP += earned; addXP(earned, inputEl);
+                learnQueue.shift(); updateLearnProgress(); setTimeout(nextLearnWord, 800);
+            } else {
+                fb.innerText = `Incorrect. Try again!`;
+                fb.className = 'mt-6 text-xl font-bold text-red-600 pop h-8';
+                playIncorrectSound(); currentStreak = 0; updateStreakUI();
+                inputEl.classList.add('shake'); setTimeout(() => inputEl.classList.remove('shake'), 500);
+                learnQueue.push(learnQueue.shift()); setTimeout(nextLearnWord, 2000);
+            }
+        }
+        
+        function hintLearn() { 
+            if (!currentLearnWord) return;
+            
+            let targetWord = currentLearnWord.en;
+            let inputEl = document.getElementById('learn-input');
+            let currentInput = inputEl.value;
+            
+            let matchLength = 0;
+            // Find how much of the current input correctly matches the target prefix
+            for(let i = 0; i < currentInput.length; i++) {
+                if(currentInput[i].toLowerCase() === targetWord[i]?.toLowerCase()) {
+                    matchLength++;
+                } else {
+                    break;
+                }
+            }
+            
+            // Reveal exactly one more correct letter
+            if(matchLength < targetWord.length) {
+                inputEl.value = targetWord.substring(0, matchLength + 1);
+            }
+            
+            inputEl.focus();
+        }
+        
+        function restartLearn() { initLearn(); }
+
+        // --- Matching Game ---
+        let memCards = [], memFlipped = [], memMatched = 0, memMoves = 0, isBoardLocked = false;
+        function initMemoryGame() {
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = ''; document.getElementById('memory-win').classList.add('hidden');
+            memFlipped = []; memMatched = 0; memMoves = 0; isBoardLocked = false;
+            document.getElementById('memory-moves').innerText = '0';
+            
+            let selectedVocab = [...vocab].sort(() => 0.5 - Math.random()).slice(0, 6);
+            memCards = [];
+            
+            selectedVocab.forEach((item, index) => {
+                memCards.push({ id: `en_${index}`, text: item.en, matchId: index, isEng: true });
+                memCards.push({ id: `ru_${index}`, text: item.ru, matchId: index, isEng: false });
+            });
+            
+            memCards.sort(() => 0.5 - Math.random());
+            
+            memCards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'memory-card h-24 md:h-28';
+                cardEl.dataset.matchId = card.matchId;
+                cardEl.dataset.index = index;
+                cardEl.innerHTML = `
+                    <div class="memory-card-inner">
+                        <div class="memory-card-front"><i class="fa-solid fa-question"></i></div>
+                        <div class="memory-card-back ${card.isEng ? 'font-bold' : ''}">${card.text}</div>
+                    </div>
+                `;
+                cardEl.onclick = () => flipMemoryCard(cardEl);
+                grid.appendChild(cardEl);
+            });
+        }
+        
+        function flipMemoryCard(card) {
+            if (isBoardLocked || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            playCardFlipSound(); card.classList.add('flipped'); memFlipped.push(card);
+            
+            if (memFlipped.length === 2) {
+                memMoves++; document.getElementById('memory-moves').innerText = memMoves; checkForMatch();
+            }
+        }
+        
+        function checkForMatch() {
+            let isMatch = memFlipped[0].dataset.matchId === memFlipped[1].dataset.matchId;
+            isBoardLocked = true;
+            if (isMatch) {
+                setTimeout(() => {
+                    memFlipped[0].classList.add('matched'); memFlipped[1].classList.add('matched');
+                    playCorrectSound(); memMatched++; memFlipped = []; isBoardLocked = false;
+                    
+                    if (memMatched === 6) {
+                        setTimeout(() => {
+                            document.getElementById('memory-win').classList.remove('hidden');
+                            document.getElementById('memory-win').classList.add('flex');
+                            document.getElementById('memory-final-moves').innerText = memMoves;
+                            addXP(50, document.getElementById('memory-win'));
+                        }, 500);
+                    }
+                }, 400);
+            } else {
+                setTimeout(() => {
+                    memFlipped[0].classList.remove('flipped'); memFlipped[1].classList.remove('flipped');
+                    playIncorrectSound(); memFlipped = []; isBoardLocked = false;
+                }, 1000);
+            }
+        }
+
+        // --- General Grammar Utilities ---
+        function cleanStr(s) { return s.trim().toLowerCase().replace(/\s+/g, ' '); }
+        
+        function handleTaskFeedback(elId, correct, total, btnTrigger) {
+            const el = document.getElementById(`feedback-${elId}`);
+            if(correct === total) { 
+                el.innerText = "Excellent! All answers are correct."; el.className = "feedback correct pop"; 
+                playCorrectSound(); if(!el.dataset.rewarded) { addXP(total * 15, btnTrigger); el.dataset.rewarded = "true"; }
+            } else { 
+                el.innerText = `Score: ${correct} out of ${total}. Keep trying!`; el.className = "feedback incorrect pop"; playIncorrectSound();
+            }
+        }
+
+        function checkInputs(prefix, answers, btn) {
+            let correct = 0;
+            for(let i=0; i<answers.length; i++) {
+                let val = cleanStr(document.getElementById(`${prefix}-${i+1}`).value);
+                if(val === cleanStr(answers[i]) || (answers[i] === "doesn't" && val === "does not") || (answers[i] === "don't play" && val === "do not play")) correct++;
+            }
+            handleTaskFeedback(prefix, correct, answers.length, btn);
+        }
+
+        function checkSelects(prefix, answers, btn) {
+            let correct = 0;
+            for(let i=0; i<answers.length; i++) { if(document.getElementById(`${prefix}-${i+1}`).value === answers[i]) correct++; }
+            handleTaskFeedback(prefix, correct, answers.length, btn);
+        }
+        
+        function resetTaskInputs(prefix, count) {
+            for(let i=1; i<=count; i++) { document.getElementById(`${prefix}-${i}`).value = ''; }
+            document.getElementById(`feedback-${prefix}`).style.display = 'none';
+        }
+        
+        function checkDictation(prefix, answers, btn) {
+            let correct = 0;
+            for(let i=0; i<answers.length; i++) {
+                let val = cleanStr(document.getElementById(`${prefix}-${i+1}`).value);
+                let checkVal = val.replace(/[.,!?;:]/g, ""); // Strip punctuation for leniency
+                let checkAns = answers[i].replace(/[.,!?;:]/g, "");
+                if(checkVal === checkAns) correct++;
+            }
+            handleTaskFeedback(prefix, correct, answers.length, btn);
+        }
+
+        // --- Sentence Builder Logic ---
+        const buildersData = {
+            1: { words: ["always", "have", "on", "we", "English", "Monday"], correct: "we always have english on monday" },
+            2: { words: ["late", "never", "is", "for", "he", "school"], correct: "he is never late for school" }
+        };
+        let currentBuilds = { 1: [], 2: [] };
+
+        function initBuilder() {
+            for (let id in buildersData) {
+                currentBuilds[id] = [];
+                renderBuilderArea(id);
+                
+                const bank = document.getElementById(`bank-${id}`);
+                bank.innerHTML = '';
+                // Shuffle words
+                let words = [...buildersData[id].words].sort(() => 0.5 - Math.random());
+                words.forEach((word, index) => {
+                    let btn = document.createElement('div');
+                    btn.className = 'word-bank-btn';
+                    btn.innerText = word;
+                    btn.onclick = () => addWordToSentence(id, word, btn);
+                    bank.appendChild(btn);
+                });
+                document.getElementById(`feedback-t4`).style.display = 'none';
+            }
+        }
+        
+        function addWordToSentence(id, word, btnElement) {
+            currentBuilds[id].push({ word: word, ref: btnElement });
+            btnElement.classList.add('used');
+            renderBuilderArea(id);
+        }
+        
+        function removeWordFromSentence(id, index) {
+            let item = currentBuilds[id].splice(index, 1)[0];
+            item.ref.classList.remove('used');
+            renderBuilderArea(id);
+        }
+
+        function renderBuilderArea(id) {
+            const area = document.getElementById(`builder-area-${id}`);
+            area.innerHTML = '';
+            let sentenceStr = [];
+            currentBuilds[id].forEach((item, index) => {
+                let token = document.createElement('div');
+                token.className = 'built-word';
+                token.innerText = item.word;
+                token.onclick = () => removeWordFromSentence(id, index);
+                area.appendChild(token);
+                sentenceStr.push(item.word);
+            });
+            document.getElementById(`t4-${id}`).value = sentenceStr.join(' ');
+        }
+        
+        function checkBuilder(btn) {
+            let correct = 0;
+            for (let id in buildersData) {
+                let built = cleanStr(document.getElementById(`t4-${id}`).value);
+                if (built === buildersData[id].correct) correct++;
+            }
+            handleTaskFeedback('t4', correct, 2, btn);
+        }
+
+        // Init on load
+        window.onload = function() {
+            renderCard();
+            initLearn();
+            initMemoryGame();
+            initBuilder();
+        }
+    </script>
+</body>
+</html>
